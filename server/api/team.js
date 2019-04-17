@@ -206,19 +206,35 @@ router.post('/set', passport.authenticate('jwt', { session: false }), async ctx 
  */
 router.get('/grade', passport.authenticate('jwt', { session: false }), async ctx => {
     try {
+        const set = parseInt(ctx.query.set);
         const user = await ctx.db.query(
             "select * from user where id = ? and role = 2",
             [ctx.state.user.id]
         );
         if (user.length > 0) {
-            //设置优秀社团
-            const setTeam = await ctx.db.query(
-                "update team set grade=1 where id=?",
-                [ctx.query.id]
-            );
-            if (setTeam.affectedRows > 0) {
-                ctx.status = 200;
-                ctx.body = { msg: "设置优秀社团成功！" };
+            if (set == 0) {
+                //取消优秀社团
+                const setTeam = await ctx.db.query(
+                    "update team set grade=0 where id=?",
+                    [ctx.query.id]
+                );
+                if (setTeam.affectedRows > 0) {
+                    ctx.status = 200;
+                    ctx.body = { msg: "取消优秀社团成功！" };
+                }
+            } else if (set == 1) {
+                //设置优秀社团
+                const setTeam = await ctx.db.query(
+                    "update team set grade=1 where id=?",
+                    [ctx.query.id]
+                );
+                if (setTeam.affectedRows > 0) {
+                    ctx.status = 200;
+                    ctx.body = { msg: "设置优秀社团成功！" };
+                }
+            }else{
+                ctx.status = 400;
+                    ctx.body = { msg: "参数无效！" };
             }
         } else {
             ctx.status = 201;
@@ -248,19 +264,19 @@ router.get('/excellent', passport.authenticate('jwt', { session: false }), async
                 "select * from team where grade = 1",
             );
             var list = [];
-            for(var i=0;i<getTeam.length;i++){
+            for (var i = 0; i < getTeam.length; i++) {
                 const getActivity = await ctx.db.query(
                     "select * from activity where team = ?",
                     [getTeam[i].title]
                 );
                 list.push({
-                    team:getTeam[i],
-                    activity:getActivity
+                    team: getTeam[i],
+                    activity: getActivity
                 });
             }
             if (list) {
                 ctx.state = 200;
-                ctx.body = { msg: "success",list };
+                ctx.body = { msg: "success", list };
             }
         } else {
             ctx.status = 400;
